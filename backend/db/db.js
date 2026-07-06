@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 
-console.log(process.env.MONGO_URI);
+// console.log(process.env.MONGO_URI);
 
 function connect(){
     mongoose.connect(process.env.MONGO_URI)

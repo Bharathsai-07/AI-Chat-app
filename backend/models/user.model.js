@@ -23,7 +23,11 @@ userSchema.methods.isValidPassword=async function(password){
     return await bcrypt.compare(password,this.password);
 }
 userSchema.methods.generateJWT=function(){
-    return jwt.sign({email:this.email},process.env.JWT);
+    return jwt.sign({
+        email:this.email},
+        process.env.JWT,
+        {expiresIn:'24hr'}
+    );
 }
 
 const User=mongoose.model('user',userSchema);
