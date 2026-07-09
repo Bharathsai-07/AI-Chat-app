@@ -11,6 +11,9 @@ export const createProject = async (req,res)=>{
     try{
         const {name}=req.body;
         const loggedInUser=await userModel.findOne({email:req.user.email})
+        if(!loggedInUser){
+            return res.status(404).json({message:'Logged in user not found'});
+        }
         const userId=loggedInUser._id;
     
     

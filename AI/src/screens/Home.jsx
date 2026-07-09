@@ -6,21 +6,20 @@ export const Home = () => {
   const [isModalOpen,setIsModalOpen]=useState(false)
   const [projectName, setProjectName] = useState('')
 
-  function createProject(e){
+  async function createProject(e){
     e.preventDefault()
-    console.log({projectName})
-    setIsModalOpen(true)
 
-    axios.post('/projects/create',{
-      name:projectName,
-    })
-      .then((res)=>{
-        console.log(res)
-        setModalOpen(false)
+    try {
+      const res = await axios.post('/projects/create', {
+        name: projectName.trim(),
       })
-      .catch((error)=>{
-        console.log(error)
-    })
+
+      console.log(res)
+      setProjectName('')
+      setIsModalOpen(false)
+    } catch (error) {
+      console.log(error.response?.data || error.message)
+    }
   }
 
   function handleSubmit(e){
@@ -56,7 +55,7 @@ export const Home = () => {
               <div className="flex gap-3 justify-end">
                 <button 
                   type="button" 
-                  // onClick={() => setIsModalOpen(false)}
+                  onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 font-semibold"
                 >
                   Cancel
