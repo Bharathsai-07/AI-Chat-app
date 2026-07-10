@@ -30,3 +30,14 @@ export const createProject = async (req,res)=>{
         res.status(400).json({message: error.message || 'Failed to create project'});
     }
 }
+
+export const getAllProject=async(req,res)=>{
+    try{
+        const loggedInUser=await userModel.findOne(
+            {email:req.user.email}
+        );
+    }catch(err){
+        console.log(err);
+        re.send(400).json({error:err.message||'Failed to fetch projects'})
+    }
+}
