@@ -13,7 +13,14 @@ router.post('/create',
 
 router.get('/all',
     authMiddleware.authUser,
-    projectController.getAllProject
+    projectController.getAllProjects
 );
+
+router.put('/add-user',
+    authMiddleware.authUser,
+    body('users').isArray().withMessage('users must be an array').bail()
+    .custom((users)=> users.every(user=> typeof user === 'string')).withMessage('users must be an array of strings'),
+    projectController.addUserToProject
+)
 
 export default router;

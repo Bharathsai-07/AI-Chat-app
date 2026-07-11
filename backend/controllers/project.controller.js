@@ -31,13 +31,37 @@ export const createProject = async (req,res)=>{
     }
 }
 
-export const getAllProject=async(req,res)=>{
+export const getAllProjects=async(req,res)=>{
     try{
         const loggedInUser=await userModel.findOne(
             {email:req.user.email}
         );
     }catch(err){
         console.log(err);
-        re.send(400).json({error:err.message||'Failed to fetch projects'})
+        res.status(400).json({error:err.message||'Failed to fetch projects'})
     }
 }
+
+export const addUserToProject=async(req,res)=>{
+    const errors=validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({errors:errors.array()});
+    }
+    try{
+        const {projectId,users,userId}=req.body;
+        const loggedInUser=await userModel.findOne({
+            email:req.user.email
+        })
+        const project=await projectService.addUserToProject({
+            projectId,
+            users,
+            userId:loggedInUser._id
+        });
+        return res.status(200).json({project});
+
+    }catch(err){
+        console.log(err);
+        res.status(400).json({error:err.message||'Failed to add user to project'})
+    }
+}
+
