@@ -36,6 +36,15 @@ export const getAllProjects=async(req,res)=>{
         const loggedInUser=await userModel.findOne(
             {email:req.user.email}
         );
+        if(!loggedInUser){
+            return res.status(404).json({message:'Logged in user not found'});
+        }
+
+        const projects=await projectService.getAllProjectsByUserId({
+            userId:loggedInUser._id
+        });
+
+        return res.status(200).json({projects});
     }catch(err){
         console.log(err);
         res.status(400).json({error:err.message||'Failed to fetch projects'})
