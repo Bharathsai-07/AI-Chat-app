@@ -42,7 +42,16 @@ export const loginUserController=async(req,res)=>{
     }
 }
 export const profileController=async(req,res)=>{
-    console.log(req.user);
+    try{
+        const user=await userModel.findOne({email:req.user.email});
+        if(!user){
+            return res.status(404).json({message:'User not found'});
+        }
+        res.status(200).json({user});
+    }catch(err){
+        console.log(err);
+        res.status(400).json({error:err.message});
+    }
 }
 export const logoutController=async(req,res)=>{
     try{

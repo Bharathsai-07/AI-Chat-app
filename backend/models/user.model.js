@@ -26,7 +26,7 @@ userSchema.methods.generateJWT=function(){
     return jwt.sign({
         email:this.email},
         process.env.JWT,
-        {expiresIn:'24hr'}
+        {expiresIn:'24h'}
     );
 }
 

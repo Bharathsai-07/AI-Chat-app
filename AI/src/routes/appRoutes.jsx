@@ -1,4 +1,4 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import Login from '../screens/login.jsx'
 import Register from '../screens/register.jsx'
 import { Home } from '../screens/Home.jsx'

@@ -1,15 +1,14 @@
-import React,{useContext, useState, useEffect} from 'react'
-import {useNavigate} from 'react-router-dom'
-import {UserContext} from '../context/user.context.jsx'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import axios from '../config/axios.js'
+
 export const Home = () => {
-  const {user} = useContext(UserContext)
   const navigate = useNavigate()
-  const [isModalOpen,setIsModalOpen]=useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const [projectName, setProjectName] = useState('')
   const [project, setProject] = useState([])
 
-  async function createProject(e){
+  async function createProject(e) {
     e.preventDefault()
 
     try {
@@ -17,7 +16,9 @@ export const Home = () => {
         name: projectName.trim(),
       })
 
-      console.log(res)
+      if (res.data) {
+        setProject((prev) => [...prev, res.data])
+      }
       setProjectName('')
       setIsModalOpen(false)
     } catch (error) {
@@ -25,20 +26,13 @@ export const Home = () => {
     }
   }
 
-  useEffect(()=>{
-    axios.get('/projects/all').then((res)=>{
-      setProject(res.data.projects || []);
-    }).catch((err)=>{
-      console.log(err);
+  useEffect(() => {
+    axios.get('/projects/all').then((res) => {
+      setProject(res.data.projects || [])
+    }).catch((err) => {
+      console.log(err)
     })
-  },[])
-
-  function handleSubmit(e){
-    e.preventDefault()
-    console.log('Project name:', projectName)
-    setProjectName('')
-    setIsModalOpen(false)
-  }
+  }, [])
 
   return (
     <main className='p-4'>

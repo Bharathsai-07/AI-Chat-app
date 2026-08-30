@@ -28,7 +28,7 @@ export const getAllProjectsByUserId=async({userId})=>{
     return allUserProjects;
 }
 
-export const addUserToProject=async({projectId,users})=>{
+export const addUserToProject=async({projectId,users,userId})=>{
     if(!projectId){
         throw new Error('ProjectId is required');
     }
@@ -38,16 +38,19 @@ export const addUserToProject=async({projectId,users})=>{
     if(!users){
         throw new Error('Users is required');
     }
-    if(!Array.isArray(users)||users.some(userId=> !mongoose.Types.ObjectId.isValid(userId))){
+    if(!Array.isArray(users)||users.some(id=> !mongoose.Types.ObjectId.isValid(id))){
         throw new Error('Invalid userId in users array')
+    }
+    if(!userId){
+        throw new Error('UserId is required');
     }
 
     const project=await projectModel.findOne({
         _id:projectId,
-        users:{$in:users}
+        users:userId
     })
     if(!project){
-        throw new Error('project not found or user is not belong to this project');
+        throw new Error('User does not belong to this project');
     }
     const updatedProject=await projectModel.findOneAndUpdate({
         _id:projectId
