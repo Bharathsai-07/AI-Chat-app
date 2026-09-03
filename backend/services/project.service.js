@@ -66,6 +66,34 @@ export const addUserToProject=async({projectId,users,userId})=>{
     return updatedProject;
 }
 
+export const removeUserFromProject=async({projectId,userToRemoveId,userId})=>{
+    if(!projectId){
+        throw new Error('ProjectId is required');
+    }
+    if(!mongoose.Types.ObjectId.isValid(projectId) || !mongoose.Types.ObjectId.isValid(userToRemoveId)){
+        throw new Error('Invalid projectId or userId');
+    }
+    if(!userId){
+        throw new Error('UserId is required');
+    }
+
+    const project=await projectModel.findOne({
+        _id:projectId,
+        users:userId
+    });
+    if(!project){
+        throw new Error('User does not belong to this project');
+    }
+
+    return projectModel.findOneAndUpdate({
+        _id:projectId
+    },{
+        $pull:{users:userToRemoveId}
+    },{
+        new:true
+    }).populate('users');
+}
+
 export const getProjectById=async({projectId})=>{
     if(!projectId){
         throw new Error('ProjectId is required')

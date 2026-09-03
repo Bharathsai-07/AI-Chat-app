@@ -23,6 +23,13 @@ router.put('/add-user',
     projectController.addUserToProject
 )
 
+router.put('/remove-user',
+    authMiddleware.authUser,
+    body('projectId').isString().withMessage('projectId is required'),
+    body('userToRemoveId').isString().withMessage('userToRemoveId is required'),
+    projectController.removeUserFromProject
+)
+
 router.get('/get-project/:projectId',
     authMiddleware.authUser,
     projectController.getProjectById
