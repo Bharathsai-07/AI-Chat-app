@@ -65,7 +65,9 @@ const Project = () => {
       setSelectedCollaborators([])
       setIsUsersModalOpen(false)
     } catch (error) {
-      console.log(error)
+      console.log("Status:", error.response?.status)
+      console.log("Error:", error.response?.data)
+      console.log("Message:", error.message)
     }
   }
 
