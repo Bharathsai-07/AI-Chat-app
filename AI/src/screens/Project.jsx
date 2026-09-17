@@ -1,6 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useContext } from 'react'
 import axios from '../config/axios'
 import { useLocation } from 'react-router-dom'
+import {initializeSocket,receiveMessage,sendMessage,disconnectSocket } from '../config/socket'
+import { UserContext } from '../context/user.context.jsx'
 
 const Project = () => {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false)
@@ -10,6 +12,9 @@ const Project = () => {
   const location = useLocation()
   const [project,setProject]=useState(location.state?.project)
   const [users, setUsers]=useState([])
+  const [message,setMessage]=useState('');
+  const [messages,setMessages]=useState([]);
+  const {user}=useContext(UserContext)
 
   const getUserId = (user) => user?._id ?? user?.id
   const collaborators = project?.users || []
@@ -27,7 +32,16 @@ const Project = () => {
     setIsUsersModalOpen(false)
   }
 
+  
   useEffect(()=>{
+    if (!project?._id) {
+      return undefined
+    }
+
+    initializeSocket(project._id)
+    receiveMessage('project-message',data=>{
+      setMessages((currentMessages) => [...currentMessages, data])
+    })
     if (project?._id) {
       axios.get(`/projects/get-project/${project._id}`).then((res) => {
         setProject(res.data.project)
@@ -40,20 +54,21 @@ const Project = () => {
     }).catch((err)=>{
       console.log(err);
     })
-  }, [])
-
+    return disconnectSocket
+  }, [project?._id])
+  
   const toggleCollaborator = (user) => {
     const userId = getUserId(user)
     setSelectedCollaborators((current) => current.some((item) => getUserId(item) === userId)
-      ? current.filter((item) => getUserId(item) !== userId)
-      : [...current, user])
+    ? current.filter((item) => getUserId(item) !== userId)
+    : [...current, user])
   }
-
+  
   const addCollaborators = async () => {
     if (!project?._id || selectedCollaborators.length === 0) {
       return
     }
-
+    
     try {
       await axios.put('/projects/add-user', {
         projectId: project._id,
@@ -70,7 +85,7 @@ const Project = () => {
       console.log("Message:", error.message)
     }
   }
-
+  
   const removeCollaborator = async (user) => {
     try {
       const response = await axios.put('/projects/remove-user', {
@@ -84,6 +99,19 @@ const Project = () => {
     } catch (error) {
       console.log(error)
     }
+  }
+  
+  function send(){
+    if (!message.trim() || !user?._id) {
+      return
+    }
+
+    sendMessage('project-message',{
+      message: message.trim(),
+      sender:user._id,
+      senderEmail: user.email
+    })
+    setMessage("");
   }
 
   return (
@@ -104,19 +132,20 @@ const Project = () => {
         </header>
         <div className='conversation-area flex-grow flex flex-col justify-end p-4'>
           <div className='message-box flex mt-auto flex-col'>
-            <div className='incoming message flex flex-col gap-2 p-2 bg-slate-200 rounded-md max-w-60'>
-              <small className='opacity-45 text-xs'>name@gmail.com</small>
-              <p className="text-sm">Hello,this is an application cksuevs kscuosebf asejfnaef olsjdefojebf </p>
-            </div>
-            <div className='ml-auto message flex flex-col m-2 gap-2 p-2 bg-slate-200 rounded-md max-w-60'>
-              <small className='opacity-45 text-xs'>name@gmail.com</small>
-              <p className="text-sm">Hello,this is an application</p>
-            </div>
+            {messages.map((item, index) => {
+              const isOwnMessage = item.sender === user?._id
+              return <div key={`${item.sender}-${index}`} className={`${isOwnMessage ? 'ml-auto' : ''} message flex flex-col m-2 gap-2 p-2 bg-slate-200 rounded-md max-w-60`}>
+                <small className='opacity-45 text-xs'>{isOwnMessage ? 'You' : item.senderEmail || 'Project member'}</small>
+                <p className="text-sm">{item.message}</p>
+              </div>
+            })}
           </div>
           <div className="inputField w-full flex">
-            <input className='p-2 px-4 border-none outline-none rounded-md'
+            <input value={message} onChange={(e)=>setMessage(e.target.value)} className='flex-grow p-2 px-4 border-none outline-none rounded-md' placeholder='Type a message...' ></input>
+            <button onClick={send} className='flex-shrink-0 bg-slate-200 hover:bg-slate-300'><i className="mr-4 ml-4 ri-send-plane-fill"></i></button>
+            {/* <input className='p-2 px-4 border-none outline-none rounded-md'
             type="text" placeholder='Type a message...'  />
-            <button className='flex-grow bg-slate-200 hover:bg-slate-300'><i className="mr-4 ml-4 ri-send-plane-fill"></i></button>
+            <button className='flex-grow bg-slate-200 hover:bg-slate-300'><i className="mr-4 ml-4 ri-send-plane-fill"></i></button> */}
           </div>
 
         </div>
