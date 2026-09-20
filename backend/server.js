@@ -65,8 +65,10 @@ socket.on('project-message', (data)=>{
     io.to(socket.roomId).emit('project-message', data);
 })
 
-  socket.on('event', data => { /* … */ });
-  socket.on('disconnect', () => { /* … */ });
+  socket.on('disconnect', () => { 
+    console.log("user disconnected");
+    socket.leave(socket.roomId);
+   });
 });
 
 io.engine.on('connection_error', error => {
