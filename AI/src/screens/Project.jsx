@@ -1,4 +1,4 @@
-import { useState, useEffect, useContext } from 'react'
+import React, { useState, useEffect, useContext, useRef } from 'react'
 import axios from '../config/axios'
 import { useLocation } from 'react-router-dom'
 import {initializeSocket,receiveMessage,sendMessage,disconnectSocket } from '../config/socket'
@@ -15,6 +15,7 @@ const Project = () => {
   const [message,setMessage]=useState('');
   const [messages,setMessages]=useState([]);
   const {user}=useContext(UserContext)
+  const messageBox = useRef(null)
 
   const getUserId = (user) => user?._id ?? user?.id
   const collaborators = project?.users || []
@@ -39,23 +40,30 @@ const Project = () => {
     }
 
     initializeSocket(project._id)
-    receiveMessage('project-message',data=>{
+    receiveMessage('project-message', (data) => {
       setMessages((currentMessages) => [...currentMessages, data])
     })
-    if (project?._id) {
-      axios.get(`/projects/get-project/${project._id}`).then((res) => {
-        setProject(res.data.project)
-      }).catch((err) => {
-        console.log(err)
-      })
-    }  
-    axios.get('/users/all').then((res)=>{
-      setUsers(res.data. users);
-    }).catch((err)=>{
-      console.log(err);
+
+    axios.get(`/projects/get-project/${project._id}`).then((res) => {
+      setProject(res.data.project)
+    }).catch((err) => {
+      console.log(err)
     })
+
+    axios.get('/users/all').then((res) => {
+      setUsers(res.data.users)
+    }).catch((err) => {
+      console.log(err)
+    })
+
     return disconnectSocket
   }, [project?._id])
+
+  useEffect(() => {
+    if (messageBox.current) {
+      messageBox.current.scrollTop = messageBox.current.scrollHeight
+    }
+  }, [messages])
   
   const toggleCollaborator = (user) => {
     const userId = getUserId(user)
@@ -100,7 +108,7 @@ const Project = () => {
       console.log(error)
     }
   }
-  
+
   function send(){
     if (!message.trim() || !user?._id) {
       return
@@ -108,10 +116,11 @@ const Project = () => {
 
     sendMessage('project-message',{
       message: message.trim(),
-      sender:user._id,
+      sender:user,
       senderEmail: user.email
     })
     setMessage("");
+    scrollToBottom();
   }
 
   return (
@@ -130,13 +139,13 @@ const Project = () => {
             <i className="ri-group-fill"></i>
           </button>
         </header>
-        <div className='conversation-area flex-grow flex flex-col justify-end p-4'>
-          <div className='message-box flex mt-auto flex-col'>
+        <div className='conversation-area flex min-h-0 flex-1 min-w-0 flex-col p-4'>
+          <div ref={messageBox} className='message-box flex min-h-0 flex-1 min-w-0 flex-col overflow-y-auto overflow-x-hidden'>
             {messages.map((item, index) => {
-              const isOwnMessage = item.sender === user?._id
-              return <div key={`${item.sender}-${index}`} className={`${isOwnMessage ? 'ml-auto' : ''} message flex flex-col m-2 gap-2 p-2 bg-slate-200 rounded-md max-w-60`}>
+              const isOwnMessage = getUserId(item.sender) === getUserId(user)
+              return <div key={`${getUserId(item.sender) || 'unknown'}-${index}`} className={`${isOwnMessage ? 'ml-auto' : ''} message my-2 flex max-w-[80%] min-w-0 flex-col gap-2 rounded-md bg-slate-200 p-2 break-words`}>
                 <small className='opacity-45 text-xs'>{isOwnMessage ? 'You' : item.senderEmail || 'Project member'}</small>
-                <p className="text-sm">{item.message}</p>
+                <p className="text-sm break-words whitespace-pre-wrap overflow-wrap-anywhere">{item.message}</p>
               </div>
             })}
           </div>
